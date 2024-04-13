@@ -31,3 +31,18 @@ func (s *MemoryStore) Insert(token string, b []byte, expiresAt time.Time) error 
 
 	return nil
 }
+
+func (s *MemoryStore) Get(token string) (b []byte, found bool, err error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	item, found := s.items[token]
+	if !found {
+		return nil, false, nil
+	}
+
+	if time.Now().UnixNano() > item.expiresAt {
+		return nil, false, nil
+	}
+	return item.obj, true, nil
+}
