@@ -46,3 +46,11 @@ func (s *MemoryStore) Get(token string) (b []byte, found bool, err error) {
 	}
 	return item.obj, true, nil
 }
+
+func (s *MemoryStore) Delete(token string) error {
+	s.mu.Lock()
+	delete(s.items, token)
+	s.mu.Unlock()
+
+	return nil
+}
