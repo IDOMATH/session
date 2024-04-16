@@ -21,6 +21,10 @@ type MemoryStore struct {
 	mu    sync.RWMutex
 }
 
+func NewMemoryStore() *MemoryStore {
+	return &MemoryStore{}
+}
+
 func (s *MemoryStore) Insert(token string, b []byte, expiresAt time.Time) error {
 	s.mu.Lock()
 	s.items[token] = item{
