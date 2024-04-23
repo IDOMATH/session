@@ -1,20 +1,9 @@
-package main
+package session
 
 import (
 	"sync"
 	"time"
 )
-
-type Store interface {
-	Insert(token string, b []byte, expiresAt time.Time) (err error)
-	Get(token string) (b []byte, exists bool, err error)
-	Delete(token string) (err error)
-}
-
-type item struct {
-	obj       []byte
-	expiresAt int64
-}
 
 type MemoryStore struct {
 	items map[string]item
@@ -22,7 +11,9 @@ type MemoryStore struct {
 }
 
 func NewMemoryStore() *MemoryStore {
-	return &MemoryStore{}
+	return &MemoryStore{
+		items: make(map[string]item),
+	}
 }
 
 func (s *MemoryStore) Insert(token string, b []byte, expiresAt time.Time) error {
