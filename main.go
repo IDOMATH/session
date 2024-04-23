@@ -22,7 +22,7 @@ func main() {
 
 	router.HandleFunc("GET /", handleHome)
 	router.HandleFunc("POST /session", sessionInsert)
-	router.HandleFunc("GET /session", sessionDump)
+	//router.HandleFunc("GET /session", sessionDump)
 
 	log.Fatal(server.ListenAndServe())
 }
