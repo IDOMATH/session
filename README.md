@@ -1,5 +1,6 @@
 # session
 
-TODO: 
-- Add test for cleanup
-- Add test for delete
+Small Session library for in-memory session storage.
+
+TODO:
+- Add documentation for methods
