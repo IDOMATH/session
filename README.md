@@ -1,3 +1,5 @@
 # session
 
-TODO: Add some sort of cleanup to remove expired session tokens
+TODO: 
+- Add test for cleanup
+- Add test for delete
