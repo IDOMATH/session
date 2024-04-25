@@ -11,6 +11,11 @@ type MemoryStore struct {
 	stopCleanupChan chan bool
 }
 
+type item struct {
+	obj       []byte
+	expiresAt int64
+}
+
 // New creates a new memory store with the default cleanup interval (1 minute)
 func New() *MemoryStore {
 	mem := NewWithCustomCleanupInterval(time.Minute)
