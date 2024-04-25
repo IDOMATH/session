@@ -11,23 +11,28 @@ type MemoryStore struct {
 	stopCleanupChan chan bool
 }
 
+// NewMemoryStore creates a new memory store with the default cleanup interval (1 minute)
 func NewMemoryStore() *MemoryStore {
 	mem := NewMemoryStoreWithCustomCleanupInterval(time.Minute)
 
 	return mem
 }
 
+// NewMemoryStoreWithCustomCleanupInterval creates a new memory store with a user defined cleanup interval
+// sending 0 as the interval will not start the cleanup goroutine, so session
+// will persist for as long as server runs.
 func NewMemoryStoreWithCustomCleanupInterval(interval time.Duration) *MemoryStore {
 	mem := &MemoryStore{
 		items: make(map[string]item),
 	}
 	if interval != 0 {
-		go mem.startCleanUp(interval)
+		go mem.startCleanup(interval)
 	}
 
 	return mem
 }
 
+// Insert stores a token in the session.
 func (s *MemoryStore) Insert(token string, b []byte, expiresAt time.Time) error {
 	s.mu.Lock()
 	s.items[token] = item{
@@ -39,6 +44,7 @@ func (s *MemoryStore) Insert(token string, b []byte, expiresAt time.Time) error 
 	return nil
 }
 
+// Get retrieves a token from the session
 func (s *MemoryStore) Get(token string) (b []byte, found bool, err error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -54,6 +60,7 @@ func (s *MemoryStore) Get(token string) (b []byte, found bool, err error) {
 	return item.obj, true, nil
 }
 
+// Delete removes a given token from the session
 func (s *MemoryStore) Delete(token string) error {
 	s.mu.Lock()
 	delete(s.items, token)
@@ -62,7 +69,8 @@ func (s *MemoryStore) Delete(token string) error {
 	return nil
 }
 
-func (s *MemoryStore) startCleanUp(interval time.Duration) {
+// startCleanUp runs deleteExpiredTokens() at a given interval
+func (s *MemoryStore) startCleanup(interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	for {
 		select {
@@ -74,6 +82,7 @@ func (s *MemoryStore) startCleanUp(interval time.Duration) {
 	}
 }
 
+// deleteExpiredTokens deletes tokens that have expired.
 func (s *MemoryStore) deleteExpiredTokens() {
 	now := time.Now().UnixNano()
 	s.mu.Lock()
@@ -85,6 +94,8 @@ func (s *MemoryStore) deleteExpiredTokens() {
 	s.mu.Unlock()
 }
 
+// stopCleanup will tell the startCleanup() function to stop.
+// This is really only used for tests.
 func (s *MemoryStore) stopCleanup() {
 	if s.stopCleanupChan != nil {
 		s.stopCleanupChan <- true
