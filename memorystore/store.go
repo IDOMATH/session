@@ -1,4 +1,4 @@
-package session
+package memorystore
 
 import "time"
 

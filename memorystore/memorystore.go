@@ -1,4 +1,4 @@
-package session
+package memorystore
 
 import (
 	"sync"
@@ -11,17 +11,17 @@ type MemoryStore struct {
 	stopCleanupChan chan bool
 }
 
-// NewMemoryStore creates a new memory store with the default cleanup interval (1 minute)
-func NewMemoryStore() *MemoryStore {
-	mem := NewMemoryStoreWithCustomCleanupInterval(time.Minute)
+// New creates a new memory store with the default cleanup interval (1 minute)
+func New() *MemoryStore {
+	mem := NewWithCustomCleanupInterval(time.Minute)
 
 	return mem
 }
 
-// NewMemoryStoreWithCustomCleanupInterval creates a new memory store with a user defined cleanup interval
-// sending 0 as the interval will not start the cleanup goroutine, so session
+// NewWithCustomCleanupInterval creates a new memory store with a user defined cleanup interval
+// sending 0 as the interval will not start the cleanup goroutine, so memorystore
 // will persist for as long as server runs.
-func NewMemoryStoreWithCustomCleanupInterval(interval time.Duration) *MemoryStore {
+func NewWithCustomCleanupInterval(interval time.Duration) *MemoryStore {
 	mem := &MemoryStore{
 		items: make(map[string]item),
 	}
@@ -32,7 +32,7 @@ func NewMemoryStoreWithCustomCleanupInterval(interval time.Duration) *MemoryStor
 	return mem
 }
 
-// Insert stores a token in the session.
+// Insert stores a token in the memory store.
 func (s *MemoryStore) Insert(token string, b []byte, expiresAt time.Time) error {
 	s.mu.Lock()
 	s.items[token] = item{
@@ -44,7 +44,7 @@ func (s *MemoryStore) Insert(token string, b []byte, expiresAt time.Time) error 
 	return nil
 }
 
-// Get retrieves a token from the session
+// Get retrieves a token from the memory store.
 func (s *MemoryStore) Get(token string) (b []byte, found bool, err error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -60,7 +60,7 @@ func (s *MemoryStore) Get(token string) (b []byte, found bool, err error) {
 	return item.obj, true, nil
 }
 
-// Delete removes a given token from the session
+// Delete removes a given token from the memory store
 func (s *MemoryStore) Delete(token string) error {
 	s.mu.Lock()
 	delete(s.items, token)

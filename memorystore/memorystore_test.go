@@ -1,4 +1,4 @@
-package session
+package memorystore
 
 import (
 	"testing"
@@ -8,7 +8,7 @@ import (
 func TestMemoryStore_InsertGetDelete(t *testing.T) {
 	token := "token"
 	expected := "value"
-	memStore := NewMemoryStoreWithCustomCleanupInterval(0)
+	memStore := NewWithCustomCleanupInterval(0)
 	memStore.Insert(token, []byte(expected), time.Now().Add(time.Minute))
 
 	got, found, _ := memStore.Get(token)
@@ -29,7 +29,7 @@ func TestMemoryStore_InsertGetDelete(t *testing.T) {
 func TestMemoryStoreCleanUp(t *testing.T) {
 	token := "token"
 	expected := "value"
-	memStore := NewMemoryStoreWithCustomCleanupInterval(time.Millisecond * 500)
+	memStore := NewWithCustomCleanupInterval(time.Millisecond * 500)
 	defer memStore.stopCleanup()
 
 	memStore.Insert(token, []byte(expected), time.Now().Add(time.Millisecond*100))
