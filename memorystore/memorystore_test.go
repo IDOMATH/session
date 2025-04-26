@@ -11,7 +11,7 @@ func TestMemoryStore_InsertGetDelete(t *testing.T) {
 	memStore := NewWithCustomCleanupInterval(0)
 	memStore.Insert(token, []byte(expected), time.Now().Add(time.Minute))
 
-	got, found, _ := memStore.Get(token)
+	got, found := memStore.Get(token)
 	if !found {
 		t.Errorf("Expected found: true, got: %v", found)
 	}
@@ -20,7 +20,7 @@ func TestMemoryStore_InsertGetDelete(t *testing.T) {
 	}
 
 	memStore.Delete(token)
-	_, found, _ = memStore.Get(token)
+	_, found = memStore.Get(token)
 	if found {
 		t.Errorf("Expected found: false, got: %v", found)
 	}
@@ -34,7 +34,7 @@ func TestMemoryStoreCleanUp(t *testing.T) {
 
 	memStore.Insert(token, []byte(expected), time.Now().Add(time.Millisecond*100))
 
-	got, found, _ := memStore.Get(token)
+	got, found := memStore.Get(token)
 	if !found {
 		t.Errorf("Expected found: true, got: %v", found)
 	}
@@ -43,7 +43,7 @@ func TestMemoryStoreCleanUp(t *testing.T) {
 	}
 
 	time.Sleep(time.Millisecond * 600)
-	got, found, _ = memStore.Get(token)
+	_, found = memStore.Get(token)
 	if found {
 		t.Errorf("Expected found: false, got: %v", found)
 	}

@@ -50,19 +50,19 @@ func (s *MemoryStore) Insert(token string, b []byte, expiresAt time.Time) error 
 }
 
 // Get retrieves a token from the memory store.
-func (s *MemoryStore) Get(token string) (b []byte, found bool, err error) {
+func (s *MemoryStore) Get(token string) (b []byte, found bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	item, found := s.items[token]
 	if !found {
-		return nil, false, nil
+		return nil, false
 	}
 
 	if time.Now().UnixNano() > item.expiresAt {
-		return nil, false, nil
+		return nil, false
 	}
-	return item.obj, true, nil
+	return item.obj, true
 }
 
 // Delete removes a given token from the memory store
