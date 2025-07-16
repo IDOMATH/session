@@ -5,20 +5,20 @@ import (
 	"time"
 )
 
-type MemoryStore struct {
-	items           map[string]item
+type MemoryStore[T any] struct {
+	items           map[string]item[T]
 	mu              sync.RWMutex
 	stopCleanupChan chan bool
 }
 
-type item struct {
-	obj       []byte
+type item[T any] struct {
+	obj       T
 	expiresAt int64
 }
 
 // New creates a new memory store with the default cleanup interval (1 minute)
-func New() *MemoryStore {
-	mem := NewWithCustomCleanupInterval(time.Minute)
+func New[T any](dataType T) *MemoryStore[T] {
+	mem := NewWithCustomCleanupInterval[T](time.Minute)
 
 	return mem
 }
@@ -26,9 +26,9 @@ func New() *MemoryStore {
 // NewWithCustomCleanupInterval creates a new memory store with a user defined cleanup interval
 // sending 0 as the interval will not start the cleanup goroutine, so memorystore
 // will persist for as long as server runs.
-func NewWithCustomCleanupInterval(interval time.Duration) *MemoryStore {
-	mem := &MemoryStore{
-		items: make(map[string]item),
+func NewWithCustomCleanupInterval[T any](interval time.Duration) *MemoryStore[T] {
+	mem := &MemoryStore[T]{
+		items: make(map[string]item[T]),
 	}
 	if interval != 0 {
 		go mem.startCleanup(interval)
@@ -38,10 +38,10 @@ func NewWithCustomCleanupInterval(interval time.Duration) *MemoryStore {
 }
 
 // Insert stores a token in the memory store.
-func (s *MemoryStore) Insert(token string, b []byte, expiresAt time.Time) error {
+func (s *MemoryStore[T]) Insert(token string, data T, expiresAt time.Time) error {
 	s.mu.Lock()
-	s.items[token] = item{
-		obj:       b,
+	s.items[token] = item[T]{
+		obj:       data,
 		expiresAt: expiresAt.UnixNano(),
 	}
 	s.mu.Unlock()
@@ -50,23 +50,25 @@ func (s *MemoryStore) Insert(token string, b []byte, expiresAt time.Time) error 
 }
 
 // Get retrieves a token from the memory store.
-func (s *MemoryStore) Get(token string) (b []byte, found bool) {
+func (s *MemoryStore[T]) Get(token string) (data T, found bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
+	var val T
+
 	item, found := s.items[token]
 	if !found {
-		return nil, false
+		return val, false
 	}
 
 	if time.Now().UnixNano() > item.expiresAt {
-		return nil, false
+		return val, false
 	}
 	return item.obj, true
 }
 
 // Delete removes a given token from the memory store
-func (s *MemoryStore) Delete(token string) error {
+func (s *MemoryStore[T]) Delete(token string) error {
 	s.mu.Lock()
 	delete(s.items, token)
 	s.mu.Unlock()
@@ -75,7 +77,7 @@ func (s *MemoryStore) Delete(token string) error {
 }
 
 // startCleanUp runs deleteExpiredTokens() at a given interval
-func (s *MemoryStore) startCleanup(interval time.Duration) {
+func (s *MemoryStore[T]) startCleanup(interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	for {
 		select {
@@ -88,7 +90,7 @@ func (s *MemoryStore) startCleanup(interval time.Duration) {
 }
 
 // deleteExpiredTokens deletes tokens that have expired.
-func (s *MemoryStore) deleteExpiredTokens() {
+func (s *MemoryStore[T]) deleteExpiredTokens() {
 	now := time.Now().UnixNano()
 	s.mu.Lock()
 	for token, val := range s.items {
@@ -101,7 +103,7 @@ func (s *MemoryStore) deleteExpiredTokens() {
 
 // stopCleanup will tell the startCleanup() function to stop.
 // This is really only used for tests.
-func (s *MemoryStore) stopCleanup() {
+func (s *MemoryStore[T]) stopCleanup() {
 	if s.stopCleanupChan != nil {
 		s.stopCleanupChan <- true
 	}
