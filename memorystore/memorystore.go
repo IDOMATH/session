@@ -17,7 +17,7 @@ type item[T any] struct {
 }
 
 // New creates a new memory store with the default cleanup interval (1 minute)
-func New[T any](dataType T) *MemoryStore[T] {
+func New[T any]() *MemoryStore[T] {
 	mem := NewWithCustomCleanupInterval[T](time.Minute)
 
 	return mem
